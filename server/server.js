@@ -25,15 +25,27 @@ if (!mongodb) {
 }
 
 //Middleware
-const allowedOrigins = clientOrigin
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
-app.use(cors({
-  origin: allowedOrigins,
+// Handle wildcard CORS for zero-config setup
+let corsOptions = {
   credentials: true
-}));
+};
+
+if (clientOrigin === "*") {
+  // Allow all origins when using nginx reverse proxy
+  // Use function to dynamically allow request origin
+  corsOptions.origin = function (origin, callback) {
+    // Allow requests with credentials from any origin when using nginx
+    callback(null, true);
+  };
+} else {
+  const allowedOrigins = clientOrigin
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  corsOptions.origin = allowedOrigins;
+}
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(compression());
