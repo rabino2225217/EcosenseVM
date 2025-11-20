@@ -18,6 +18,7 @@ export default function Login() {
   const location = useLocation();
   const fromRegister = location.state?.fromRegister || false;
   const [checking, setChecking] = useState(!fromRegister);
+  const hasCheckedSession = React.useRef(false);
 
   React.useEffect(() => {
     document.title = "Login | EcoSense";
@@ -25,14 +26,23 @@ export default function Login() {
 
   //Check if there are existing session and then navigate accordingly
   React.useEffect(() => {
-    if (fromRegister) return;
+    // Skip if already checked or coming from register
+    if (hasCheckedSession.current || fromRegister) {
+      if (fromRegister) {
+        setChecking(false);
+      }
+      return;
+    }
+
+    let active = true;
+    hasCheckedSession.current = true;
 
     const checkSession = async () => {
       try {
         const res = await fetch(`${API_URL}/auth/me`, {
           credentials: "include",
         });
-        if (res.ok) {
+        if (res.ok && active) {
           const data = await res.json();
           navigate(data.role === "Admin" ? "/admin" : "/app", {
             replace: true,
@@ -42,12 +52,18 @@ export default function Login() {
       } catch (err) {
         console.error("Session check failed:", err);
       } finally {
-        setChecking(false);
+        if (active) {
+          setChecking(false);
+        }
       }
     };
 
     checkSession();
-  }, [navigate, fromRegister]);
+
+    return () => {
+      active = false;
+    };
+  }, [fromRegister, navigate, API_URL]);
 
   if (checking) {
     return (
