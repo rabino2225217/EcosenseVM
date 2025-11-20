@@ -44,23 +44,32 @@ export default function ProtectedRoute({
         }
 
         if (active && !socket.connected) {
-          socket.connect();
+          try {
+            socket.connect();
+          } catch (socketErr) {
+            console.error("Socket connection error:", socketErr);
+            // Don't fail auth if socket fails, just log it
+          }
         }
 
         if (active) setAuthorized(true);
       } catch (err) {
+        console.error("Auth verification error:", err);
         if (active) navigate("/login", { replace: true });
       } finally {
         if (active) setChecked(true);
       }
     };
 
-    verifyAuth();
+    // Only verify if not already checked and authorized
+    if (!checked && !authorized) {
+      verifyAuth();
+    }
 
     return () => {
       active = false;
     };
-  }, [navigate, location.pathname, requireAdmin, requireStaff]);
+  }, [navigate, requireAdmin, requireStaff]);
 
   if (!checked) {
     return (
