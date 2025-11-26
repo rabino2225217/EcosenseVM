@@ -135,6 +135,7 @@ exports.analyzeImage = async (req, res) => {
   } catch (err) {
     console.error("Error in analyzeImage:", err.message || err);
     res.status(500).json({ error: "Error processing image." });
+  } finally {
+    if (tempFile && fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
   }
-  // Files will be cleaned up by the cleanup job after 30 minutes
 };

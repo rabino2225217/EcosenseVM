@@ -1,8 +1,3 @@
-/**
- * Automatically detects the API URL based on the current origin.
- * Works with localhost, IP addresses, and domain names.
- * Automatically replaces the frontend port with the backend port (4000).
- */
 export function getApiUrl(): string {
   // In browser environment, use current origin
   if (typeof window !== 'undefined') {
